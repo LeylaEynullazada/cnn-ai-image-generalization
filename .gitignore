@@ -1,0 +1,17 @@
+# Data
+data/
+*.zip
+
+# Python
+__pycache__/
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Checkpoints
+checkpoints/
+*.pth
+*.pt
+
