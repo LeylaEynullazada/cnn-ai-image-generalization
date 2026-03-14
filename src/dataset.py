@@ -1,6 +1,9 @@
 """Dataset loading for real vs fake image classification"""
 from pathlib import Path
 
+from PIL import ImageFile
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import ImageFolder
