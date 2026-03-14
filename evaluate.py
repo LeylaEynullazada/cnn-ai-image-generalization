@@ -1,8 +1,18 @@
 """Evaluation utilities for real vs fake classification."""
 import numpy as np
 import torch
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.metrics import (
+    accuracy_score,
+    confusion_matrix,
+    classification_report,
+    precision_recall_fscore_support,
+)
 
+
+def precision_recall_f1(y_true, y_pred, average="macro"):
+    """Return precision, recall, F1 score."""
+    p, r, f1, _ = precision_recall_fscore_support(y_true, y_pred, average=average)
+    return p, r, f1
 
 def evaluate(model, dataloader, device):
     """Get all predictions and labels. Returns: y_true, y_pred, y_probs."""
@@ -45,5 +55,37 @@ def plot_confusion_matrix(cm, class_names=None):
     for i in range(cm.shape[0]):
         for j in range(cm.shape[1]):
             plt.text(j, i, str(cm[i, j]), ha="center", va="center")
+    plt.tight_layout()
+    plt.show()
+
+def show_predictions(model, dataloader, device, class_names, num_examples=8):
+    """Show sample images with predictions (correct=green, incorrect=red)."""
+    import matplotlib.pyplot as plt
+    model.eval()
+    images_shown = 0
+    fig, axes = plt.subplots(2, 4, figsize=(12, 6))
+    axes = axes.flatten()
+    with torch.no_grad():
+        for images, labels in dataloader:
+            images, labels = images.to(device), labels.cpu()
+            outputs = model(images)
+            preds = outputs.argmax(1).cpu()
+            for i in range(images.size(0)):
+                if images_shown >= num_examples:
+                    break
+                ax = axes[images_shown]
+                img = images[i].cpu().permute(1, 2, 0).numpy()
+                img = (img * np.array([0.229, 0.224, 0.225]) + np.array([0.485, 0.456, 0.406])).clip(0, 1)
+                ax.imshow(img)
+                true_label = list(class_names)[int(labels[i])]
+                pred_label = list(class_names)[int(preds[i])]
+                color = "green" if preds[i] == labels[i] else "red"
+                ax.set_title(f"True: {true_label}\nPred: {pred_label}", color=color, fontsize=9)
+                ax.axis("off")
+                images_shown += 1
+            if images_shown >= num_examples:
+                break
+    for j in range(images_shown, len(axes)):
+        axes[j].axis("off")
     plt.tight_layout()
     plt.show()
