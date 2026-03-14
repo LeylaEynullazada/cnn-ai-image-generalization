@@ -18,8 +18,8 @@ def get_transforms(image_size=128, is_train=True):
 def get_dataloaders(data_dir=".", batch_size=32, image_size=128, num_workers=0):
     
     data_path = Path(data_dir)
-    train_dir = data_path / "train"
-    test_dir = data_path / "test"
+    train_dir = data_path / "train_subset"
+    test_dir = data_path / "test_subset"
 
     transform = get_transforms(image_size)
     train_dataset = ImageFolder(root=str(train_dir), transform=transform)
