@@ -1,8 +1,10 @@
 # Real vs Fake Image Classification
 
 ## Structure
-- `train/real/`, `train/fake/` — training images
-- `test/real/`, `test/fake/` — test images
+- `train/real/`, `train/fake/` - training images
+- `test/real/`, `test/fake/` - test images
+- `train_subset/real_subset`, `train_subset/fake_subset` - training images used for milestone 1
+- `test_subset/real_subset`, `test_subset/fake_subset` - test images used for milestone 1 
 
 ## Run
 ```bash
@@ -22,5 +24,5 @@ Classify images as real or AI-generated(fake) using a CNN
 ## Team
 |Name|Contributions|
 |------|-------------|
-|Leyla Eynullazada|Data loading, preprocessing, basic modeling, and training loop, repository structure|
+|Leyla Eynullazada|Data loading, preprocessing, basic modeling, and training loop, repository structure, final experiments|
 |Raul Aghayev|Further modeling, basic evaluation and experiments|
