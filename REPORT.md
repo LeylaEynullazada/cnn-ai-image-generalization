@@ -4,7 +4,7 @@
 
 The project trains convolutional neural networks to classify images as real or AI-generated. The completed experiments focus on whether a larger CNN architecture and stronger dropout improve performance on the dataset's held-out test split.
 
-The original proposal targeted leave-one-generator-out evaluation. The available training runs reported here do not complete that protocol because the data used in the final Kaggle run was organized only by `fake` and `real` folders. The results are therefore reported as a standard train/test architecture and regularization study.
+The original proposal targeted a broader leave-one-generator-out evaluation and more architecture comparisons. In practice, the full plan was limited by available compute time: the dataset was large, several images were expensive to decode, and each full training run took close to an hour or more on Kaggle GPU. Because of this, the completed runs focus on a smaller but still relevant comparison between the baseline CNN and ResNet-18, plus one dropout setting for ResNet-18.
 
 ## Experimental Setup
 
@@ -48,12 +48,13 @@ The confusion matrix for ResNet-18 with dropout 0.5 showed stronger recall for f
 ## What Did Not Work
 
 - The full leave-one-generator-out experiment was not completed.
+- The broader architecture plan was reduced because the available GPU time was not enough for a larger sweep.
 - Large input images slowed training and produced PIL decompression warnings.
 - The notebook environment had a pandas import issue, so some final reporting was done with plain Python instead of pandas.
 - One baseline run was interrupted during final evaluation, but the best checkpoint was saved and evaluated separately.
 
 ## Conclusion
 
-The completed experiments show that ResNet-18 is a better detector than the smaller baseline CNN on the standard train/test split. Dropout 0.5 gave the best macro-F1, so stronger regularization helped in this setting. The results do not yet prove generalization to unseen generators; they mainly support the architecture and regularization comparison.
+The completed experiments show that ResNet-18 performed better than the smaller baseline CNN on the standard train/test split. Although compute limits prevented the full architecture and leave-one-generator-out study we originally wanted, the completed results still support a clear conclusion: the larger ResNet-18 model learned a stronger detector than the baseline CNN, and dropout 0.5 gave the best macro-F1 among the runs completed.
 
 The next step would be to construct generator-aware splits and repeat the same evaluation with Stable Diffusion, Midjourney, and DALL-E held out one at a time.

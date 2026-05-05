@@ -8,8 +8,10 @@ results/
 __pycache__/
 venv/
 .venv/
+.venv*/
 .venv_torch/
 .env
+*.pyc
 
 # Jupyter
 .ipynb_checkpoints/

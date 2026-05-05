@@ -1,8 +1,8 @@
 # CNN AI Image Generalization
-
 This project studies binary classification of real versus AI-generated images using convolutional neural networks. The original motivation was to test whether a detector learns general AI-image cues or mostly learns patterns tied to the data distribution. The implemented experiments compare a small custom CNN with ResNet-18 and test whether stronger dropout improves validation performance.
 
-The code is written as reusable PyTorch modules for data loading, model definition, training, and evaluation. The main experiment runner saves checkpoints, histories, metrics, confusion matrices, ROC curves, and a notebook-friendly HTML report.
+
+The code is written as reusable PyTorch modules for data loading, model definition, training, and evaluation. The main experiment runner saves checkpoints, histories, metrics, confusion matrices, ROC curves, sample predictions, and a notebook-friendly HTML report.
 
 ## Team Responsibilities
 
@@ -124,6 +124,7 @@ Outputs are written to:
 results/experiments.csv
 results/reports/<run_name>/confusion_matrix.png
 results/reports/<run_name>/roc_curve.png
+results/reports/<run_name>/sample_predictions.png
 results/reports/<run_name>/classification_report.txt
 ```
 
@@ -145,9 +146,9 @@ The confusion matrices showed that the ResNet models were better at identifying 
 
 ## Limitations
 
-- The completed runs use the dataset's standard train/test split, not leave-one-generator-out testing.
+- The completed runs use the dataset's standard train/test split, not leave-one-generator-out testing, otherwise it would take too much time to train.
 - Some images are very large, which slowed image decoding during training and evaluation.
-- The baseline training was interrupted after early stopping, so its checkpoint was evaluated separately and the training time was not recorded in the final table.
+- The baseline training was interrupted by kaggle/colab after early stopping, so its checkpoint was evaluated separately and the training time was not recorded in the final table.
 - The results should be interpreted as an architecture and regularization comparison, not as proof of robustness to unseen generators.
 
 ## Validation
@@ -166,6 +167,14 @@ Smoke run:
 python scripts/run_experiments.py --smoke
 ```
 
-## Submission Notes
+To create a sample-prediction figure from an existing checkpoint:
 
-Use the same public GitHub repository for the milestone submission and create the ZIP from the same repository state. Do not include local virtual environments, checkpoints, raw data, or generated `results/` folders in the repository ZIP unless the instructor specifically asks for them.
+```bash
+python scripts/show_predictions.py \
+  --data_dir /kaggle/working/data \
+  --architecture resnet18 \
+  --dropout_rate 0.5 \
+  --checkpoint /kaggle/working/results/resnet18_aug0.5_drop0.5/best.pth \
+  --output_path /kaggle/working/results/reports/resnet18_aug0.5_drop0.5/sample_predictions.png
+```
+`checkpoints/` and `results/`, which are ignored by git.
