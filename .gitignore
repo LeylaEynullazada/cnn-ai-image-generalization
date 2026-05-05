@@ -1,10 +1,14 @@
-# Data
+# Data and generated artifacts
 data/
+data_raw/
+results/
 *.zip
 
-# Python
+# Python environments and caches
 __pycache__/
 venv/
+.venv/
+.venv_torch/
 .env
 
 # Jupyter

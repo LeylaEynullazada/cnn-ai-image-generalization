@@ -1,4 +1,4 @@
-"""Training utilities with early stopping, checkpointing and reproducibility."""
+"""Training loop helpers."""
 
 import os
 import random
@@ -12,7 +12,7 @@ from tqdm import tqdm
 
 
 def set_seed(seed: int = 42):
-    """Set random seeds for reproducibility."""
+    """Set random seeds."""
     random.seed(seed)
     np.random.seed(seed)
     torch.manual_seed(seed)
@@ -23,7 +23,7 @@ def set_seed(seed: int = 42):
 
 
 def train_one_epoch(model, train_loader, criterion, optimizer, device):
-    """Train for one epoch. Returns average loss and accuracy."""
+    """Run one training epoch."""
     model.train()
     running_loss = 0.0
     correct = 0
@@ -48,10 +48,7 @@ def train_one_epoch(model, train_loader, criterion, optimizer, device):
 
 
 def validate(model, val_loader, criterion, device, return_preds: bool = False):
-    """Validate model.
-
-    If return_preds is True, also return (y_true, y_pred) for metric computation.
-    """
+    """Run validation."""
     model.eval()
     running_loss = 0.0
     correct = 0
@@ -68,6 +65,7 @@ def validate(model, val_loader, criterion, device, return_preds: bool = False):
             _, predicted = outputs.max(1)
             total += labels.size(0)
             correct += predicted.eq(labels).sum().item()
+
             if return_preds:
                 ys_true.extend(labels.cpu().numpy().tolist())
                 ys_pred.extend(predicted.cpu().numpy().tolist())
@@ -95,42 +93,23 @@ def train_full(
     save_optimizer: bool = True,
     scheduler=None,
 ):
-    """
-    Full training loop with early stopping and checkpointing.
-
-    Args:
-        model: PyTorch model
-        train_loader, val_loader: DataLoaders
-        num_epochs: number of epochs
-        lr: learning rate
-        device: torch.device or None (auto-select)
-        save_path: path to save best checkpoint
-        seed: random seed for reproducibility
-        monitor: 'val_loss' or 'val_f1'
-        mode: 'min' for val_loss, 'max' for val_f1
-        patience: epochs to wait for improvement
-        save_optimizer: whether to save optimizer state
-        scheduler: optional LR scheduler instance
-
-    Returns:
-        history dict
-    """
-    # reproducibility
+    """Train a model with early stopping."""
     set_seed(seed)
 
     if device is None:
         device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     model = model.to(device)
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
 
     history = {"train_loss": [], "train_acc": [], "val_loss": [], "val_acc": [], "val_f1": []}
-
     best_score = float("inf") if mode == "min" else -float("inf")
     epochs_no_improve = 0
-    d = os.path.dirname(save_path)
-    if d:
-        os.makedirs(d, exist_ok=True)
+
+    checkpoint_dir = os.path.dirname(save_path)
+    if checkpoint_dir:
+        os.makedirs(checkpoint_dir, exist_ok=True)
 
     for epoch in range(num_epochs):
         t_loss, t_acc = train_one_epoch(model, train_loader, criterion, optimizer, device)
@@ -148,22 +127,25 @@ def train_full(
         history["val_acc"].append(v_acc)
         history["val_f1"].append(v_f1)
 
-        # display
         if v_f1 is not None:
             print(
-                f"Epoch {epoch+1}/{num_epochs} | Train Loss: {t_loss:.4f} Acc: {t_acc:.2f}% | Val Loss: {v_loss:.4f} Acc: {v_acc:.2f}% F1: {v_f1:.4f}"
+                f"Epoch {epoch + 1}/{num_epochs} | "
+                f"Train Loss: {t_loss:.4f} Acc: {t_acc:.2f}% | "
+                f"Val Loss: {v_loss:.4f} Acc: {v_acc:.2f}% F1: {v_f1:.4f}"
             )
         else:
-            print(f"Epoch {epoch+1}/{num_epochs} | Train Loss: {t_loss:.4f} Acc: {t_acc:.2f}% | Val Loss: {v_loss:.4f} Acc: {v_acc:.2f}%")
+            print(
+                f"Epoch {epoch + 1}/{num_epochs} | "
+                f"Train Loss: {t_loss:.4f} Acc: {t_acc:.2f}% | "
+                f"Val Loss: {v_loss:.4f} Acc: {v_acc:.2f}%"
+            )
 
-        # compute current score for monitoring
         current = v_loss if monitor == "val_loss" else (v_f1 if v_f1 is not None else v_acc)
-
         improved = (current < best_score) if mode == "min" else (current > best_score)
+
         if improved:
             best_score = current
             epochs_no_improve = 0
-            # save checkpoint
             checkpoint = {
                 "model_state_dict": model.state_dict(),
                 "epoch": epoch,
@@ -177,14 +159,12 @@ def train_full(
         else:
             epochs_no_improve += 1
 
-        # step scheduler if present
         if scheduler is not None:
             try:
                 scheduler.step()
             except Exception:
                 pass
 
-        # early stopping
         if epochs_no_improve >= patience:
             print(f"Early stopping triggered. No improvement for {patience} epochs.")
             break
